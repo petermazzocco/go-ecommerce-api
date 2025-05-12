@@ -1,25 +1,34 @@
 package main
 
 import (
+	"context"
 	"fmt"
+	"log"
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/joho/godotenv"
-	"github.com/petermazzocco/go-ecommerce-api/internal/cart"
+	"github.com/petermazzocco/go-ecommerce-api/internal/auth"
+	"github.com/petermazzocco/go-ecommerce-api/internal/db"
 	"github.com/petermazzocco/go-ecommerce-api/internal/handlers"
-	auth "github.com/petermazzocco/go-ecommerce-api/internal/middleware"
 )
 
 func main() {
-	cart := cart.NewCart()
+	// Load ENV
 	if err := godotenv.Load(); err != nil {
 		fmt.Println("Failed to load local env")
 	}
-	// available api routes for our backend
-	r := chi.NewRouter()
 
+	// Start db 	
+	ctx := context.Background()
+	conn, err := db.RunDB(ctx)
+	if err != nil {
+		log.Fatal(err.Error())
+	}
+
+	// Chi routers
+	r := chi.NewRouter()
 	r.Use(middleware.RequestID)
 	r.Use(middleware.RealIP)
 	r.Use(middleware.Logger)
@@ -27,12 +36,12 @@ func main() {
 
 	// Api route
 	r.Route("/api", func(r chi.Router) {
-
+		// Status check
 		r.Get("/", func(w http.ResponseWriter, r *http.Request) {
-			w.Write([]byte("API"))
+			w.Write([]byte("Ecommerce API"))
 		})
 
-		// products route group
+		// Public facing products route group to return product information
 		r.Route("/products", func(r chi.Router) {
 			r.Get("/", func(w http.ResponseWriter, r *http.Request) {
 				w.Write([]byte("All products here. Incorporate pagination for all products"))
@@ -43,6 +52,7 @@ func main() {
 			})
 		})
 
+		// Public facing collections route group to return collection information
 		r.Route("/collections", func(r chi.Router) {
 			r.Get("/", func(w http.ResponseWriter, r *http.Request) {
 				w.Write([]byte("All collections here. Incorporate pagination for all collections"))
@@ -53,36 +63,29 @@ func main() {
 			})
 		})
 
-		// Any time we use the cart, we need the JWT and session ID of the cart to track
+		// `new-cart` will create a new cart, JWT and session storage
 		r.Post("/new-cart", func(w http.ResponseWriter, r *http.Request) {
-			// Create the JWT when we create a new cart
-			_, err := auth.CreateJWT(w, r, cart)
-			// Set token as a cookie or in the response body
-			if err != nil {
-				w.WriteHeader(http.StatusInternalServerError)
-				w.Write([]byte("Error"))
-			}
-
-
-			handlers.NewCartHandler(w, r)
+			handlers.NewCartHandler(w, r, ctx, conn)
 		})
+
 		// Cart logic ( must incorporate jwt to persist cart items over time )
 		r.Route("/cart", func(r chi.Router) {
-			r.Use(auth.Middleware)
+			r.Use(auth.Middleware) // Require each route has a valid JWT and cart session ID
 			r.Get("/products", func(w http.ResponseWriter, r *http.Request) {
-				handlers.GetCartProductsHandler(w, r, cart)
+				handlers.GetCartProductsHandler(w, r, ctx, conn)
 			})
 			r.Post("/clear", func(w http.ResponseWriter, r *http.Request) {
-				handlers.ClearCartHandler(w, cart)
+				handlers.ClearCartHandler(w, r, ctx, conn)
 			})
 			r.Post("/add-item", func(w http.ResponseWriter, r *http.Request) {
-				handlers.AddItemHandler(w, r, cart)
+				handlers.AddItemHandler(w, r, ctx, conn)
 			})
 			r.Post("/remove-item", func(w http.ResponseWriter, r *http.Request) {
-				handlers.RemoveItemHandler(w, r, cart)
+				handlers.RemoveItemHandler(w, r, ctx, conn)
 			})
-			// r.Post("/add-quantity-item", handlers.AddItemQuantity)
-			// r.Post("/remove-quantity-item", handlers.RemoveItemQuantity)
+			r.Post("/update-quantity-item", func(w http.ResponseWriter, r *http.Request) {
+				handlers.UpdateItemQuantityHandler(w, r, ctx, conn)
+			})	
 		})
 
 	})

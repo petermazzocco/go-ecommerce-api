@@ -7,15 +7,15 @@ import (
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
-	"github.com/petermazzocco/go-ecommerce-api/internal/cart"
+	"github.com/petermazzocco/go-ecommerce-api/internal/db"
 )
 
-func CreateJWT(w http.ResponseWriter, r *http.Request, c *cart.Cart) (string, error) {
+func CreateJWT(w http.ResponseWriter, r *http.Request, c db.Cart) (string, error) {
 	key := os.Getenv("JWT_KEY")
 
 	claims := jwt.MapClaims{
 		"expiresAt": time.Now().Add(24 * time.Hour),
-		"sessionId": c.ID,
+		"cartID":    c.ID, // pass the cart ID
 	}
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
@@ -25,21 +25,22 @@ func CreateJWT(w http.ResponseWriter, r *http.Request, c *cart.Cart) (string, er
 		return "", fmt.Errorf("An unknown error occurred")
 	}
 
-    http.SetCookie(w, &http.Cookie{
-        Name: "dam-nation-shop",
-        Value: ss,
-        HttpOnly: true,
-		Secure: false,
-		MaxAge: int(24 * time.Hour),
+	http.SetCookie(w, &http.Cookie{
+		Name:     "dam-nation-shop",
+		Value:    ss,
+		HttpOnly: true,
+		Secure:   false,
+		MaxAge:   int(24 * time.Hour),
 		SameSite: http.SameSiteLaxMode,
-    })
+	})
 
 	return ss, nil
 }
 
-func ValidateJWT(tokenString string) error {
+func ValidateJWT(tokenString string, r *http.Request) error {
 	key := os.Getenv("JWT_KEY")
-
+	cId := r.FormValue("cartID")
+	
 	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (any, error) {
 		return []byte(key), nil
 	}, jwt.WithValidMethods([]string{jwt.SigningMethodHS256.Alg()}))
@@ -48,9 +49,12 @@ func ValidateJWT(tokenString string) error {
 		return fmt.Errorf(err.Error())
 	}
 
-	if _, ok := token.Claims.(jwt.MapClaims); ok {
-		// Check claims for sessionID of cart
-		return nil
+	if claims, ok := token.Claims.(jwt.MapClaims); ok {
+		claimsID := claims["cartID"]
+		if claimsID == cId {
+			return nil
+		}
+		return fmt.Errorf("An error occurred")
 	} else {
 		return fmt.Errorf("An error occurred")
 	}
@@ -62,10 +66,10 @@ func Middleware(next http.Handler) http.Handler {
 		token, err := r.Cookie("dam-nation-shop")
 		if err != nil {
 			w.Write([]byte("Permission denied"))
-			return 
+			return
 		}
-		
-		if err := ValidateJWT(token.Value); err != nil {
+
+		if err := ValidateJWT(token.Value, r); err != nil {
 			w.Write([]byte("Permission denied"))
 			return
 		}

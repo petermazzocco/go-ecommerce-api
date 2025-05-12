@@ -1,13 +1,16 @@
 package handlers
 
 import (
+	"context"
 	"encoding/json"
-	"fmt"
 	"net/http"
 	"strconv"
 	"time"
 
-	"github.com/petermazzocco/go-ecommerce-api/internal/cart"
+	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5"
+	"github.com/petermazzocco/go-ecommerce-api/internal/methods"
+	"github.com/petermazzocco/go-ecommerce-api/internal/auth"
 )
 
 func GetCookie(r *http.Request) string {
@@ -18,10 +21,26 @@ func GetCookie(r *http.Request) string {
 	return cookie.Value
 }
 
-func GetCartProductsHandler(w http.ResponseWriter, r *http.Request, c *cart.Cart) {
+func NewCartHandler(w http.ResponseWriter, r *http.Request, ctx context.Context, conn *pgx.Conn) {
+	// Create a new cart pointer
+	cart := methods.NewCart(ctx, conn)
+
+	// Create the JWT when we create a new NewCartHandler
+	_, err := auth.CreateJWT(w, r, cart)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+	w.Write([]byte("New cart created: " + cart.ID.String()))
+}
+
+func GetCartProductsHandler(w http.ResponseWriter, r *http.Request, ctx context.Context, conn *pgx.Conn) {
 	w.Header().Set("Content-Type", "application/json")
-	cookie := GetCookie(r)
-	items, err := c.GetItems(cookie)
+	id := r.FormValue("cartID")
+	p, _ := uuid.Parse(id)
+	items, err := methods.GetItems(ctx, conn, p)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -38,8 +57,11 @@ func GetCartProductsHandler(w http.ResponseWriter, r *http.Request, c *cart.Cart
 
 }
 
-func ClearCartHandler(w http.ResponseWriter, c *cart.Cart) {
-	if err := c.ClearAll(); err != nil {
+func ClearCartHandler(w http.ResponseWriter, r *http.Request, ctx context.Context, conn *pgx.Conn) {
+	w.Header().Set("Content-Type", "application/json")
+	id := r.FormValue("cartID")
+	p, _ := uuid.Parse(id)
+	if err := methods.ClearAll(ctx, conn, p); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
@@ -57,83 +79,67 @@ func ClearCartHandler(w http.ResponseWriter, c *cart.Cart) {
 	w.Write([]byte("Cart has been cleared"))
 }
 
-func NewCartHandler(w http.ResponseWriter, r *http.Request) {
-	cart := cart.NewCart()
+func AddItemHandler(w http.ResponseWriter, r *http.Request, ctx context.Context, conn *pgx.Conn) {
+	c := r.PostFormValue("cartID")
+	p, _ := uuid.Parse(c)
 
-	// Create a new cookie
-	cookie := &http.Cookie{
-		Name:     "dam_nation_shop",
-		Value:    "12345",
-		Path:     "/",                            // Adjust path as needed
-		Expires:  time.Now().Add(24 * time.Hour), // Set expiration time
-		HttpOnly: true,                           // Optional: prevents client-side JavaScript access
-		Secure:   true,                           // Optional: requires HTTPS
-		SameSite: http.SameSiteStrictMode,        // Optional: helps prevent CSRF attacks
+	prod := r.PostFormValue("productID")
+	prodID, err := strconv.Atoi(prod)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
 	}
-
-	http.SetCookie(w, cookie)
-	fmt.Println("Cart", cart)
+	if err := methods.AddItem(ctx, conn, p, prodID); err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
 	w.WriteHeader(http.StatusOK)
-	w.Write([]byte("New cart has been creatd with the cookie"))
-
+	w.Write([]byte("Item has been added to cart"))
 }
 
-func AddItemHandler(w http.ResponseWriter, r *http.Request, c *cart.Cart) {
-	item := r.PostFormValue("itemID")
-	id, err := strconv.Atoi(item)
+func RemoveItemHandler(w http.ResponseWriter, r *http.Request, ctx context.Context, conn *pgx.Conn) {
+	c := r.PostFormValue("cartID")
+	p, _ := uuid.Parse(c)
+
+	prod := r.PostFormValue("productID")
+	prodID, err := strconv.Atoi(prod)
 	if err != nil {
-		w.Write([]byte("An error occurred formatting ID to int"))
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	if err := methods.RemoveItem(ctx, conn, p, prodID); err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	if err := c.AddItem(id); err != nil {
-		formatted := fmt.Sprintf("An error occurred: %s", err.Error())
-		w.Write([]byte(formatted))
-		return
-	}
-
-	w.Write([]byte("Item has been added to the cart"))
+	w.WriteHeader(http.StatusOK)
+	w.Write([]byte("Item has been removed from cart"))
 }
 
-func RemoveItemHandler(w http.ResponseWriter, r *http.Request, c *cart.Cart) {
-	item := r.PostFormValue("itemID")
-	id, err := strconv.Atoi(item)
+func UpdateItemQuantityHandler(w http.ResponseWriter, r *http.Request, ctx context.Context, conn *pgx.Conn) {
+
+	c := r.PostFormValue("cartID")
+	q := r.PostFormValue("quantity")
+	p, _ := uuid.Parse(c)
+
+	quan, err := strconv.Atoi(q)
 	if err != nil {
-		w.Write([]byte("An error occurred formatting ID to int"))
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-
-	cookie := GetCookie(r)
-	if err := c.RemoveItem(id, cookie); err != nil {
-		formatted := fmt.Sprintf("An error occurred: %s", err.Error())
-		w.Write([]byte(formatted))
+	prod := r.PostFormValue("productID")
+	prodID, err := strconv.Atoi(prod)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
+
+	if err := methods.UpdateItemQuantity(ctx, conn, p, prodID, quan); err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+	w.Write([]byte("Item has been removed from cart"))
 }
-
-func RemoveItemQuantityHandler(w http.ResponseWriter, r *http.Request) {
-
-}
-
-//
-// func AddItemQuantityHandler(w http.ResponseWriter, r *http.Request) {
-// 	cart := &cart.Cart{}
-//
-// 	item := r.PostFormValue("itemID")
-// 	id, err := strconv.Atoi(item)
-// 	if err != nil {
-// 		w.Write([]byte("An error occurred formatting ID to int"))
-// 		return
-// 	}
-//
-// 	c, err := cart.AddItemQuantity(id)
-// 	if err != nil {
-// 		formatted := fmt.Sprintf("An error occurred: %s", err.Error())
-// 		w.Write([]byte(formatted))
-// 		return
-// 	}
-//
-// 	formatted := fmt.Sprintf("Quantity for item %v has been added: %v", id, c)
-// 	w.Write([]byte(formatted))
-// }

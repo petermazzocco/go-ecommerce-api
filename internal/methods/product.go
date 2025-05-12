@@ -1,5 +1,13 @@
-package product
+package methods
 
+import (
+	"context"
+	"fmt"
+
+	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgtype"
+	"github.com/petermazzocco/go-ecommerce-api/internal/db"
+)
 
 type Product struct {
 	ID          int      `json:"id"`
@@ -9,14 +17,6 @@ type Product struct {
 	Images      []string `json:"images"`
 	Sizes       []Size   `json:"sizes"`
 	FitGuide    FitGuide `json:"fitGuide"`
-}
-
-type Collection struct {
-	ID          int       `json:"id"`
-	Name        string    `json:"name"`
-	Description string    `json:"description"`
-	Products    []Product `json:"products"`
-	Images      []string  `json:"images"`
 }
 
 type Size struct {
@@ -37,4 +37,34 @@ type FitGuide struct {
 	Waist         float64 `json:"waist"`
 	Thigh         float64 `json:"thigh"`
 	Knee          float64 `json:"knee"`
+}
+
+func CreateProduct(ctx context.Context, conn *pgx.Conn, p Product) (db.Product, error) {
+	q := db.New(conn)
+
+	product, err := q.CreateProduct(ctx, db.CreateProductParams{
+		Name: p.Name,
+		Description: pgtype.Text{String: p.Description},
+	})
+	
+	if err != nil {
+		return db.Product{}, fmt.Errorf("Error occurred creating product")
+	}
+	return product, nil
+}
+
+func RemoveProduct(id int) error {
+	return nil
+}
+
+func AddProductToCollection(pID, cID int) error {
+	return nil
+}
+
+func RemoveProductFromCollection(pID, cID int) error {
+	return nil
+}
+
+func UpdateProduct(id int) error {
+	return nil
 }
