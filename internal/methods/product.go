@@ -129,7 +129,6 @@ func UpdateProduct(ctx context.Context, conn *pgx.Conn, p Product) error {
 		Price: price,
 		Description: pgtype.Text{String: p.Description},	
 	}); err != nil {
-		log.Println(err.Error())
 		return fmt.Errorf("Error occurred updating product")
 	}
 

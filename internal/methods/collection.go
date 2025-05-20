@@ -8,13 +8,6 @@ import (
 	"github.com/petermazzocco/go-ecommerce-api/internal/db"
 )
 
-type Collection struct {
-	ID          int       `json:"id"`
-	Name        string    `json:"name"`
-	Description string    `json:"description"`
-	Products    []Product `json:"products"`
-	Images      []string  `json:"images"`
-}
 
 func CreateCollection(ctx context.Context, conn *pgx.Conn, c db.Collection) (db.Collection, error) {
 	q := db.New(conn)

@@ -11,16 +11,6 @@ import (
 	"github.com/petermazzocco/go-ecommerce-api/internal/db"
 )
 
-type Cart struct {
-	ID       uuid.UUID
-	Products []CartProduct
-}
-
-type CartProduct struct {
-	Product  Product
-	Quantity int
-}
-
 
 // Create a new cart
 func NewCart(ctx context.Context, conn *pgx.Conn) db.Cart {
