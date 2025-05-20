@@ -9,3 +9,14 @@ sql:
         package: "db"
         out: "internal/db"
         sql_package: "pgx/v5"
+        overrides:
+          - db_type: bool
+            go_type:
+              import: ""
+              type: bool
+          - db_type: bool
+            go_type:
+              import: ""
+              type: bool
+              pointer: true
+            nullable: true

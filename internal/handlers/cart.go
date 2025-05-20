@@ -3,14 +3,15 @@ package handlers
 import (
 	"context"
 	"encoding/json"
+	"log"
 	"net/http"
 	"strconv"
 	"time"
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
-	"github.com/petermazzocco/go-ecommerce-api/internal/methods"
 	"github.com/petermazzocco/go-ecommerce-api/internal/auth"
+	"github.com/petermazzocco/go-ecommerce-api/internal/methods"
 )
 
 func GetCookie(r *http.Request) string {
@@ -22,12 +23,12 @@ func GetCookie(r *http.Request) string {
 }
 
 func NewCartHandler(w http.ResponseWriter, r *http.Request, ctx context.Context, conn *pgx.Conn) {
-	// Create a new cart pointer
 	cart := methods.NewCart(ctx, conn)
-
+	user, _ := methods.GetUser(1)
 	// Create the JWT when we create a new NewCartHandler
-	_, err := auth.CreateJWT(w, r, cart)
+	_, err := auth.CreateJWT(w, r, cart, user)
 	if err != nil {
+		log.Println(err.Error())
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
@@ -62,6 +63,7 @@ func ClearCartHandler(w http.ResponseWriter, r *http.Request, ctx context.Contex
 	id := r.FormValue("cartID")
 	p, _ := uuid.Parse(id)
 	if err := methods.ClearAll(ctx, conn, p); err != nil {
+		log.Println(err.Error())
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
@@ -86,10 +88,12 @@ func AddItemHandler(w http.ResponseWriter, r *http.Request, ctx context.Context,
 	prod := r.PostFormValue("productID")
 	prodID, err := strconv.Atoi(prod)
 	if err != nil {
+		log.Println(err.Error())
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 	if err := methods.AddItem(ctx, conn, p, prodID); err != nil {
+		log.Println(err.Error())
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
@@ -104,10 +108,12 @@ func RemoveItemHandler(w http.ResponseWriter, r *http.Request, ctx context.Conte
 	prod := r.PostFormValue("productID")
 	prodID, err := strconv.Atoi(prod)
 	if err != nil {
+		log.Println(err.Error())
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 	if err := methods.RemoveItem(ctx, conn, p, prodID); err != nil {
+		log.Println(err.Error())
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
@@ -124,6 +130,7 @@ func UpdateItemQuantityHandler(w http.ResponseWriter, r *http.Request, ctx conte
 
 	quan, err := strconv.Atoi(q)
 	if err != nil {
+		log.Println(err.Error())
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
@@ -131,11 +138,13 @@ func UpdateItemQuantityHandler(w http.ResponseWriter, r *http.Request, ctx conte
 	prod := r.PostFormValue("productID")
 	prodID, err := strconv.Atoi(prod)
 	if err != nil {
+		log.Println(err.Error())
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
 	if err := methods.UpdateItemQuantity(ctx, conn, p, prodID, quan); err != nil {
+		log.Println(err.Error())
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}

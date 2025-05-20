@@ -35,13 +35,16 @@ type CollectionImage struct {
 	ID           int32
 	CollectionID int32
 	ImageUrl     string
+	IsMain       pgtype.Bool
 	CreatedAt    pgtype.Timestamptz
+	UpdatedAt    pgtype.Timestamptz
 }
 
 type CollectionProduct struct {
 	CollectionID int32
 	ProductID    int32
 	CreatedAt    pgtype.Timestamptz
+	UpdatedAt    pgtype.Timestamptz
 }
 
 type FitGuide struct {
@@ -59,6 +62,7 @@ type FitGuide struct {
 	Waist         pgtype.Numeric
 	Thigh         pgtype.Numeric
 	Knee          pgtype.Numeric
+	LegOpening    pgtype.Numeric
 	CreatedAt     pgtype.Timestamptz
 	UpdatedAt     pgtype.Timestamptz
 }
@@ -76,7 +80,9 @@ type ProductImage struct {
 	ID        int32
 	ProductID int32
 	ImageUrl  string
+	IsMain    pgtype.Bool
 	CreatedAt pgtype.Timestamptz
+	UpdatedAt pgtype.Timestamptz
 }
 
 type ProductSize struct {
@@ -86,4 +92,13 @@ type ProductSize struct {
 	Stock     int32
 	CreatedAt pgtype.Timestamptz
 	UpdatedAt pgtype.Timestamptz
+}
+
+type User struct {
+	ID           int32
+	Email        string
+	PasswordHash string
+	IsAdmin      pgtype.Bool
+	CreatedAt    pgtype.Timestamptz
+	UpdatedAt    pgtype.Timestamptz
 }

@@ -237,6 +237,35 @@ func (q *Queries) CreateProductFitGuide(ctx context.Context, arg CreateProductFi
 	return err
 }
 
+const createUser = `-- name: CreateUser :one
+INSERT INTO users (
+  email, password_hash, is_admin
+) VALUES (
+  $1, $2, $3
+)
+RETURNING id, email, password_hash, is_admin, created_at, updated_at
+`
+
+type CreateUserParams struct {
+	Email        string
+	PasswordHash string
+	IsAdmin      pgtype.Bool
+}
+
+func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (User, error) {
+	row := q.db.QueryRow(ctx, createUser, arg.Email, arg.PasswordHash, arg.IsAdmin)
+	var i User
+	err := row.Scan(
+		&i.ID,
+		&i.Email,
+		&i.PasswordHash,
+		&i.IsAdmin,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
+}
+
 const deleteCollection = `-- name: DeleteCollection :exec
 DELETE FROM collections
 WHERE id = $1
@@ -285,6 +314,25 @@ type DeleteProductImageParams struct {
 func (q *Queries) DeleteProductImage(ctx context.Context, arg DeleteProductImageParams) error {
 	_, err := q.db.Exec(ctx, deleteProductImage, arg.ProductID, arg.ImageUrl)
 	return err
+}
+
+const deleteUser = `-- name: DeleteUser :one
+DELETE FROM users
+WHERE id = $1 RETURNING id, email, password_hash, is_admin, created_at, updated_at
+`
+
+func (q *Queries) DeleteUser(ctx context.Context, id int32) (User, error) {
+	row := q.db.QueryRow(ctx, deleteUser, id)
+	var i User
+	err := row.Scan(
+		&i.ID,
+		&i.Email,
+		&i.PasswordHash,
+		&i.IsAdmin,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
 }
 
 const getCart = `-- name: GetCart :one
@@ -452,7 +500,7 @@ func (q *Queries) GetProduct(ctx context.Context, id int32) (Product, error) {
 }
 
 const getProductFitGuide = `-- name: GetProductFitGuide :one
-SELECT id, product_id, body_length, sleeve_length, chest_width, shoulder_width, arm_hole, front_rise, inseam, hem, back_rise, waist, thigh, knee, created_at, updated_at FROM fit_guides
+SELECT id, product_id, body_length, sleeve_length, chest_width, shoulder_width, arm_hole, front_rise, inseam, hem, back_rise, waist, thigh, knee, leg_opening, created_at, updated_at FROM fit_guides
 WHERE product_id = $1 LIMIT 1
 `
 
@@ -475,6 +523,7 @@ func (q *Queries) GetProductFitGuide(ctx context.Context, productID int32) (FitG
 		&i.Waist,
 		&i.Thigh,
 		&i.Knee,
+		&i.LegOpening,
 		&i.CreatedAt,
 		&i.UpdatedAt,
 	)
@@ -536,6 +585,26 @@ func (q *Queries) GetProductSizes(ctx context.Context, productID int32) ([]GetPr
 	return items, nil
 }
 
+const getUser = `-- name: GetUser :one
+SELECT id, email, password_hash, is_admin, created_at, updated_at FROM users
+WHERE id = $1 LIMIT 1
+`
+
+// Users
+func (q *Queries) GetUser(ctx context.Context, id int32) (User, error) {
+	row := q.db.QueryRow(ctx, getUser, id)
+	var i User
+	err := row.Scan(
+		&i.ID,
+		&i.Email,
+		&i.PasswordHash,
+		&i.IsAdmin,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
+}
+
 const listCollections = `-- name: ListCollections :many
 SELECT id, name, description, created_at, updated_at FROM collections
 ORDER BY name
@@ -586,6 +655,38 @@ func (q *Queries) ListProducts(ctx context.Context) ([]Product, error) {
 			&i.Name,
 			&i.Description,
 			&i.Price,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const listUsers = `-- name: ListUsers :many
+SELECT id, email, password_hash, is_admin, created_at, updated_at FROM users 
+ORDER BY created_at DESC
+`
+
+func (q *Queries) ListUsers(ctx context.Context) ([]User, error) {
+	rows, err := q.db.Query(ctx, listUsers)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []User
+	for rows.Next() {
+		var i User
+		if err := rows.Scan(
+			&i.ID,
+			&i.Email,
+			&i.PasswordHash,
+			&i.IsAdmin,
 			&i.CreatedAt,
 			&i.UpdatedAt,
 		); err != nil {

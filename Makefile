@@ -10,7 +10,9 @@ AIR_CONFIG=.air.toml
 
 # Directory paths
 CMD_DIR=cmd/api
+DB_DIR=cmd/db
 MAIN_FILE=$(CMD_DIR)/main.go
+DB_FILE=$(DB_DIR)/main.go
 
 # Run the application with air for hot reloading
 dev:
@@ -23,6 +25,9 @@ build:
 # Run the application without air
 run:
 	$(GO) run $(MAIN_FILE)
+
+run-db:
+	$(GO) run $(DB_FILE)
 
 # Clean build artifacts
 clean:
