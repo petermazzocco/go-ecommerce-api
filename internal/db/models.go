@@ -9,96 +9,96 @@ import (
 )
 
 type Cart struct {
-	ID        pgtype.UUID
-	CreatedAt pgtype.Timestamptz
-	UpdatedAt pgtype.Timestamptz
+	ID        pgtype.UUID        `json:"id"`
+	CreatedAt pgtype.Timestamptz `json:"createdAt"`
+	UpdatedAt pgtype.Timestamptz `json:"updatedAt"`
 }
 
 type CartItem struct {
-	ID        int32
-	CartID    pgtype.UUID
-	ProductID int32
-	Quantity  int32
-	CreatedAt pgtype.Timestamptz
-	UpdatedAt pgtype.Timestamptz
+	ID        int32              `json:"id"`
+	CartID    pgtype.UUID        `json:"cartId"`
+	ProductID int32              `json:"productId"`
+	Quantity  int32              `json:"quantity"`
+	CreatedAt pgtype.Timestamptz `json:"createdAt"`
+	UpdatedAt pgtype.Timestamptz `json:"updatedAt"`
 }
 
 type Collection struct {
-	ID          int32
-	Name        string
-	Description pgtype.Text
-	CreatedAt   pgtype.Timestamptz
-	UpdatedAt   pgtype.Timestamptz
+	ID          int32              `json:"id"`
+	Name        string             `json:"name"`
+	Description pgtype.Text        `json:"description"`
+	CreatedAt   pgtype.Timestamptz `json:"createdAt"`
+	UpdatedAt   pgtype.Timestamptz `json:"updatedAt"`
 }
 
 type CollectionImage struct {
-	ID           int32
-	CollectionID int32
-	ImageUrl     string
-	IsMain       pgtype.Bool
-	CreatedAt    pgtype.Timestamptz
-	UpdatedAt    pgtype.Timestamptz
+	ID           int32              `json:"id"`
+	CollectionID int32              `json:"collectionId"`
+	ImageUrl     string             `json:"imageUrl"`
+	IsMain       pgtype.Bool        `json:"isMain"`
+	CreatedAt    pgtype.Timestamptz `json:"createdAt"`
+	UpdatedAt    pgtype.Timestamptz `json:"updatedAt"`
 }
 
 type CollectionProduct struct {
-	CollectionID int32
-	ProductID    int32
-	CreatedAt    pgtype.Timestamptz
-	UpdatedAt    pgtype.Timestamptz
+	CollectionID int32              `json:"collectionId"`
+	ProductID    int32              `json:"productId"`
+	CreatedAt    pgtype.Timestamptz `json:"createdAt"`
+	UpdatedAt    pgtype.Timestamptz `json:"updatedAt"`
 }
 
 type FitGuide struct {
-	ID            int32
-	ProductID     int32
-	BodyLength    pgtype.Numeric
-	SleeveLength  pgtype.Numeric
-	ChestWidth    pgtype.Numeric
-	ShoulderWidth pgtype.Numeric
-	ArmHole       pgtype.Numeric
-	FrontRise     pgtype.Numeric
-	Inseam        pgtype.Numeric
-	Hem           pgtype.Numeric
-	BackRise      pgtype.Numeric
-	Waist         pgtype.Numeric
-	Thigh         pgtype.Numeric
-	Knee          pgtype.Numeric
-	LegOpening    pgtype.Numeric
-	CreatedAt     pgtype.Timestamptz
-	UpdatedAt     pgtype.Timestamptz
+	ID            int32              `json:"id"`
+	ProductID     int32              `json:"productId"`
+	BodyLength    pgtype.Numeric     `json:"bodyLength"`
+	SleeveLength  pgtype.Numeric     `json:"sleeveLength"`
+	ChestWidth    pgtype.Numeric     `json:"chestWidth"`
+	ShoulderWidth pgtype.Numeric     `json:"shoulderWidth"`
+	ArmHole       pgtype.Numeric     `json:"armHole"`
+	FrontRise     pgtype.Numeric     `json:"frontRise"`
+	Inseam        pgtype.Numeric     `json:"inseam"`
+	Hem           pgtype.Numeric     `json:"hem"`
+	BackRise      pgtype.Numeric     `json:"backRise"`
+	Waist         pgtype.Numeric     `json:"waist"`
+	Thigh         pgtype.Numeric     `json:"thigh"`
+	Knee          pgtype.Numeric     `json:"knee"`
+	LegOpening    pgtype.Numeric     `json:"legOpening"`
+	CreatedAt     pgtype.Timestamptz `json:"createdAt"`
+	UpdatedAt     pgtype.Timestamptz `json:"updatedAt"`
 }
 
 type Product struct {
-	ID          int32
-	Name        string
-	Description pgtype.Text
-	Price       pgtype.Numeric
-	CreatedAt   pgtype.Timestamptz
-	UpdatedAt   pgtype.Timestamptz
+	ID          int32              `json:"id"`
+	Name        string             `json:"name"`
+	Description pgtype.Text        `json:"description"`
+	Price       pgtype.Numeric     `json:"price"`
+	CreatedAt   pgtype.Timestamptz `json:"createdAt"`
+	UpdatedAt   pgtype.Timestamptz `json:"updatedAt"`
 }
 
 type ProductImage struct {
-	ID        int32
-	ProductID int32
-	ImageUrl  string
-	IsMain    pgtype.Bool
-	CreatedAt pgtype.Timestamptz
-	UpdatedAt pgtype.Timestamptz
+	ID        int32              `json:"id"`
+	ProductID int32              `json:"productId"`
+	ImageUrl  string             `json:"imageUrl"`
+	IsMain    pgtype.Bool        `json:"isMain"`
+	CreatedAt pgtype.Timestamptz `json:"createdAt"`
+	UpdatedAt pgtype.Timestamptz `json:"updatedAt"`
 }
 
 type ProductSize struct {
-	ID        int32
-	ProductID int32
-	SizeName  string
-	Stock     int32
-	CreatedAt pgtype.Timestamptz
-	UpdatedAt pgtype.Timestamptz
+	ID        int32              `json:"id"`
+	ProductID int32              `json:"productId"`
+	SizeName  string             `json:"sizeName"`
+	Stock     int32              `json:"stock"`
+	CreatedAt pgtype.Timestamptz `json:"createdAt"`
+	UpdatedAt pgtype.Timestamptz `json:"updatedAt"`
 }
 
 type User struct {
-	ID           int32
-	Email        string
-	PasswordHash string
-	IsAdmin      pgtype.Bool
-	CreatedAt    pgtype.Timestamptz
-	UpdatedAt    pgtype.Timestamptz
+	ID           int32              `json:"id"`
+	Email        string             `json:"email"`
+	PasswordHash string             `json:"passwordHash"`
+	IsAdmin      pgtype.Bool        `json:"isAdmin"`
+	CreatedAt    pgtype.Timestamptz `json:"createdAt"`
+	UpdatedAt    pgtype.Timestamptz `json:"updatedAt"`
 }

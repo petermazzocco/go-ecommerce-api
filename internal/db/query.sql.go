@@ -23,9 +23,9 @@ DO UPDATE SET quantity = cart_items.quantity + EXCLUDED.quantity,
 `
 
 type AddCartItemParams struct {
-	CartID    pgtype.UUID
-	ProductID int32
-	Quantity  int32
+	CartID    pgtype.UUID `json:"cartId"`
+	ProductID int32       `json:"productId"`
+	Quantity  int32       `json:"quantity"`
 }
 
 func (q *Queries) AddCartItem(ctx context.Context, arg AddCartItemParams) error {
@@ -42,8 +42,8 @@ INSERT INTO collection_images (
 `
 
 type AddCollectionImageParams struct {
-	CollectionID int32
-	ImageUrl     string
+	CollectionID int32  `json:"collectionId"`
+	ImageUrl     string `json:"imageUrl"`
 }
 
 // Collection Images
@@ -61,8 +61,8 @@ INSERT INTO product_images (
 `
 
 type AddProductImageParams struct {
-	ProductID int32
-	ImageUrl  string
+	ProductID int32  `json:"productId"`
+	ImageUrl  string `json:"imageUrl"`
 }
 
 // Product Images
@@ -80,9 +80,9 @@ INSERT INTO product_sizes (
 `
 
 type AddProductSizeParams struct {
-	ProductID int32
-	SizeName  string
-	Stock     int32
+	ProductID int32  `json:"productId"`
+	SizeName  string `json:"sizeName"`
+	Stock     int32  `json:"stock"`
 }
 
 // Product Sizes
@@ -101,8 +101,8 @@ ON CONFLICT (collection_id, product_id) DO NOTHING
 `
 
 type AddProductToCollectionParams struct {
-	CollectionID int32
-	ProductID    int32
+	CollectionID int32 `json:"collectionId"`
+	ProductID    int32 `json:"productId"`
 }
 
 // Collection Products
@@ -147,8 +147,8 @@ RETURNING id, name, description, created_at, updated_at
 `
 
 type CreateCollectionParams struct {
-	Name        string
-	Description pgtype.Text
+	Name        string      `json:"name"`
+	Description pgtype.Text `json:"description"`
 }
 
 func (q *Queries) CreateCollection(ctx context.Context, arg CreateCollectionParams) (Collection, error) {
@@ -174,9 +174,9 @@ RETURNING id, name, description, price, created_at, updated_at
 `
 
 type CreateProductParams struct {
-	Name        string
-	Description pgtype.Text
-	Price       pgtype.Numeric
+	Name        string         `json:"name"`
+	Description pgtype.Text    `json:"description"`
+	Price       pgtype.Numeric `json:"price"`
 }
 
 func (q *Queries) CreateProduct(ctx context.Context, arg CreateProductParams) (Product, error) {
@@ -203,19 +203,19 @@ INSERT INTO fit_guides (
 `
 
 type CreateProductFitGuideParams struct {
-	ProductID     int32
-	BodyLength    pgtype.Numeric
-	SleeveLength  pgtype.Numeric
-	ChestWidth    pgtype.Numeric
-	ShoulderWidth pgtype.Numeric
-	ArmHole       pgtype.Numeric
-	FrontRise     pgtype.Numeric
-	Inseam        pgtype.Numeric
-	Hem           pgtype.Numeric
-	BackRise      pgtype.Numeric
-	Waist         pgtype.Numeric
-	Thigh         pgtype.Numeric
-	Knee          pgtype.Numeric
+	ProductID     int32          `json:"productId"`
+	BodyLength    pgtype.Numeric `json:"bodyLength"`
+	SleeveLength  pgtype.Numeric `json:"sleeveLength"`
+	ChestWidth    pgtype.Numeric `json:"chestWidth"`
+	ShoulderWidth pgtype.Numeric `json:"shoulderWidth"`
+	ArmHole       pgtype.Numeric `json:"armHole"`
+	FrontRise     pgtype.Numeric `json:"frontRise"`
+	Inseam        pgtype.Numeric `json:"inseam"`
+	Hem           pgtype.Numeric `json:"hem"`
+	BackRise      pgtype.Numeric `json:"backRise"`
+	Waist         pgtype.Numeric `json:"waist"`
+	Thigh         pgtype.Numeric `json:"thigh"`
+	Knee          pgtype.Numeric `json:"knee"`
 }
 
 func (q *Queries) CreateProductFitGuide(ctx context.Context, arg CreateProductFitGuideParams) error {
@@ -247,9 +247,9 @@ RETURNING id, email, password_hash, is_admin, created_at, updated_at
 `
 
 type CreateUserParams struct {
-	Email        string
-	PasswordHash string
-	IsAdmin      pgtype.Bool
+	Email        string      `json:"email"`
+	PasswordHash string      `json:"passwordHash"`
+	IsAdmin      pgtype.Bool `json:"isAdmin"`
 }
 
 func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (User, error) {
@@ -282,8 +282,8 @@ WHERE collection_id = $1 AND image_url = $2
 `
 
 type DeleteCollectionImageParams struct {
-	CollectionID int32
-	ImageUrl     string
+	CollectionID int32  `json:"collectionId"`
+	ImageUrl     string `json:"imageUrl"`
 }
 
 func (q *Queries) DeleteCollectionImage(ctx context.Context, arg DeleteCollectionImageParams) error {
@@ -307,8 +307,8 @@ WHERE product_id = $1 AND image_url = $2
 `
 
 type DeleteProductImageParams struct {
-	ProductID int32
-	ImageUrl  string
+	ProductID int32  `json:"productId"`
+	ImageUrl  string `json:"imageUrl"`
 }
 
 func (q *Queries) DeleteProductImage(ctx context.Context, arg DeleteProductImageParams) error {
@@ -368,11 +368,11 @@ WHERE ci.cart_id = $1
 `
 
 type GetCartItemsRow struct {
-	ProductID   int32
-	Quantity    int32
-	Name        string
-	Description pgtype.Text
-	Price       pgtype.Numeric
+	ProductID   int32          `json:"productId"`
+	Quantity    int32          `json:"quantity"`
+	Name        string         `json:"name"`
+	Description pgtype.Text    `json:"description"`
+	Price       pgtype.Numeric `json:"price"`
 }
 
 // Cart Items
@@ -561,8 +561,8 @@ WHERE product_id = $1
 `
 
 type GetProductSizesRow struct {
-	SizeName string
-	Stock    int32
+	SizeName string `json:"sizeName"`
+	Stock    int32  `json:"stock"`
 }
 
 func (q *Queries) GetProductSizes(ctx context.Context, productID int32) ([]GetProductSizesRow, error) {
@@ -706,8 +706,8 @@ WHERE cart_id = $1 AND product_id = $2
 `
 
 type RemoveCartItemParams struct {
-	CartID    pgtype.UUID
-	ProductID int32
+	CartID    pgtype.UUID `json:"cartId"`
+	ProductID int32       `json:"productId"`
 }
 
 func (q *Queries) RemoveCartItem(ctx context.Context, arg RemoveCartItemParams) error {
@@ -721,8 +721,8 @@ WHERE collection_id = $1 AND product_id = $2
 `
 
 type RemoveProductFromCollectionParams struct {
-	CollectionID int32
-	ProductID    int32
+	CollectionID int32 `json:"collectionId"`
+	ProductID    int32 `json:"productId"`
 }
 
 func (q *Queries) RemoveProductFromCollection(ctx context.Context, arg RemoveProductFromCollectionParams) error {
@@ -738,9 +738,9 @@ WHERE cart_id = $1 AND product_id = $2
 `
 
 type UpdateCartItemQuantityParams struct {
-	CartID    pgtype.UUID
-	ProductID int32
-	Quantity  int32
+	CartID    pgtype.UUID `json:"cartId"`
+	ProductID int32       `json:"productId"`
+	Quantity  int32       `json:"quantity"`
 }
 
 func (q *Queries) UpdateCartItemQuantity(ctx context.Context, arg UpdateCartItemQuantityParams) error {
@@ -768,9 +768,9 @@ WHERE id = $1
 `
 
 type UpdateCollectionParams struct {
-	ID          int32
-	Name        string
-	Description pgtype.Text
+	ID          int32       `json:"id"`
+	Name        string      `json:"name"`
+	Description pgtype.Text `json:"description"`
 }
 
 func (q *Queries) UpdateCollection(ctx context.Context, arg UpdateCollectionParams) error {
@@ -788,10 +788,10 @@ WHERE id = $1
 `
 
 type UpdateProductParams struct {
-	ID          int32
-	Name        string
-	Description pgtype.Text
-	Price       pgtype.Numeric
+	ID          int32          `json:"id"`
+	Name        string         `json:"name"`
+	Description pgtype.Text    `json:"description"`
+	Price       pgtype.Numeric `json:"price"`
 }
 
 func (q *Queries) UpdateProduct(ctx context.Context, arg UpdateProductParams) error {
@@ -823,19 +823,19 @@ WHERE product_id = $1
 `
 
 type UpdateProductFitGuideParams struct {
-	ProductID     int32
-	BodyLength    pgtype.Numeric
-	SleeveLength  pgtype.Numeric
-	ChestWidth    pgtype.Numeric
-	ShoulderWidth pgtype.Numeric
-	ArmHole       pgtype.Numeric
-	FrontRise     pgtype.Numeric
-	Inseam        pgtype.Numeric
-	Hem           pgtype.Numeric
-	BackRise      pgtype.Numeric
-	Waist         pgtype.Numeric
-	Thigh         pgtype.Numeric
-	Knee          pgtype.Numeric
+	ProductID     int32          `json:"productId"`
+	BodyLength    pgtype.Numeric `json:"bodyLength"`
+	SleeveLength  pgtype.Numeric `json:"sleeveLength"`
+	ChestWidth    pgtype.Numeric `json:"chestWidth"`
+	ShoulderWidth pgtype.Numeric `json:"shoulderWidth"`
+	ArmHole       pgtype.Numeric `json:"armHole"`
+	FrontRise     pgtype.Numeric `json:"frontRise"`
+	Inseam        pgtype.Numeric `json:"inseam"`
+	Hem           pgtype.Numeric `json:"hem"`
+	BackRise      pgtype.Numeric `json:"backRise"`
+	Waist         pgtype.Numeric `json:"waist"`
+	Thigh         pgtype.Numeric `json:"thigh"`
+	Knee          pgtype.Numeric `json:"knee"`
 }
 
 func (q *Queries) UpdateProductFitGuide(ctx context.Context, arg UpdateProductFitGuideParams) error {
@@ -865,9 +865,9 @@ WHERE product_id = $1 AND size_name = $2
 `
 
 type UpdateProductStockParams struct {
-	ProductID int32
-	SizeName  string
-	Stock     int32
+	ProductID int32  `json:"productId"`
+	SizeName  string `json:"sizeName"`
+	Stock     int32  `json:"stock"`
 }
 
 func (q *Queries) UpdateProductStock(ctx context.Context, arg UpdateProductStockParams) error {
