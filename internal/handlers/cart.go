@@ -14,8 +14,14 @@ import (
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
 	"github.com/petermazzocco/go-ecommerce-api/internal/auth"
+	"github.com/petermazzocco/go-ecommerce-api/internal/db"
 	"github.com/petermazzocco/go-ecommerce-api/internal/methods"
 )
+
+type NewProduct struct {
+	Product db.GetCartItemsRow      `json:"product"`
+	Images  []string                `json:"images"`
+}
 
 func GetCartIDFromCookie(r *http.Request) (string, error) {
 	key := os.Getenv("JWT_KEY")
@@ -80,7 +86,6 @@ func GetCartProductsHandler(w http.ResponseWriter, r *http.Request, ctx context.
 		http.Error(w, "An unknown error occurred", http.StatusInternalServerError)
 		return
 	}
-
 	items, err := methods.GetItems(ctx, conn, p)
 	if err != nil {
 		log.Println(err.Error())
@@ -88,7 +93,21 @@ func GetCartProductsHandler(w http.ResponseWriter, r *http.Request, ctx context.
 		return
 	}
 
-	j, err := json.Marshal(items)
+	products := make([]NewProduct, len(items))
+	for i := range len(items) {
+		images, err := methods.GetProductImagesByID(ctx, conn, items[i].ProductID)
+		if err != nil {
+			log.Println(err.Error())
+			http.Error(w, "An unknown error occurred", http.StatusInternalServerError)
+			return
+		}
+		products[i] = NewProduct{
+			Product: items[i],
+			Images:  images,
+		}
+	}
+
+	j, err := json.Marshal(products)
 	if err != nil {
 		log.Println(err.Error())
 		http.Error(w, "An unknown error occurred", http.StatusInternalServerError)

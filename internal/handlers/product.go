@@ -9,11 +9,19 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"github.com/jackc/pgx/v5"
+	"github.com/petermazzocco/go-ecommerce-api/internal/db"
 	"github.com/petermazzocco/go-ecommerce-api/internal/methods"
 )
 
+type NewProductHandler struct {
+	Product db.Product     `json:"product"`
+	Images  []string       `json:"images"`
+	Sizes   []methods.Size `json:"sizes"`
+}
+
 func CreateProductHandler(w http.ResponseWriter, r *http.Request, ctx context.Context, conn *pgx.Conn) {
 	w.Header().Set("Content-Type", "application/json")
+	
 	var p methods.Product
 	name := r.PostFormValue("productName")
 	description := r.PostFormValue("productDescription")
@@ -31,13 +39,32 @@ func CreateProductHandler(w http.ResponseWriter, r *http.Request, ctx context.Co
 		return
 	}
 
+	if err := methods.AddProductSizes(ctx, conn, product.ID, []methods.Size{
+		{Size: "S", Stock: 10},
+		{Size: "M", Stock: 20},
+		{Size: "L", Stock: 15},
+		{Size: "XL", Stock: 5},
+	}); err != nil {
+		log.Println(err.Error())
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	if err := methods.AddProductImages(ctx, conn, product.ID, []string{
+		"https://example.com/image1.jpg",
+		"https://example.com/image2.jpg",
+	}); err != nil {
+		log.Println(err.Error())
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
 	j, err := json.Marshal(product)
 	if err != nil {
 		log.Println(err.Error())
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-
 	w.WriteHeader(http.StatusOK)
 	w.Write(j)
 }
@@ -52,6 +79,7 @@ func ListProductsHandler(w http.ResponseWriter, r *http.Request, ctx context.Con
 		return
 	}
 
+	// Marshal the products into JSON
 	j, err := json.Marshal(products)
 	if err != nil {
 		log.Println(err.Error())
@@ -68,6 +96,7 @@ func GetProductHandler(w http.ResponseWriter, r *http.Request, ctx context.Conte
 	id := chi.URLParam(r, "id")
 	strId, _ := strconv.Atoi(id)
 	product, err := methods.GetProductByID(ctx, conn, int32(strId))
+
 	if err != nil {
 		log.Println(err.Error())
 		http.Error(w, err.Error(), http.StatusInternalServerError)
