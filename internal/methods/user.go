@@ -10,22 +10,21 @@ import (
 	"github.com/petermazzocco/go-ecommerce-api/internal/db"
 )
 
-func CreateUser(ctx context.Context, conn *pgx.Conn, u db.User) error {
+func CreateUser(ctx context.Context, conn *pgx.Conn, u db.User) (db.User, error) {
 	q := db.New(conn)
-	
-	_, err := q.CreateUser(ctx, db.CreateUserParams{
+
+	user, err := q.CreateUser(ctx, db.CreateUserParams{
 		Email:        u.Email,
 		PasswordHash: u.Email,
 		IsAdmin:      u.IsAdmin,
 	})
 
 	if err != nil {
-		return err
+		return db.User{}, err
 	}
 
-	return nil
+	return user, nil
 }
-
 
 func CheckUserAdmin(ctx context.Context, id int32) (bool, error) {
 	url := os.Getenv("DB_URL")

@@ -45,7 +45,6 @@ func main() {
 		})
 
 		r.Route("/admin", func(r chi.Router) {
-			r.Use(auth.AdminMiddleware) // admin middleware
 			r.Route("/products", func(r chi.Router) {
 				r.Get("/", func(w http.ResponseWriter, r *http.Request) {
 					handlers.ListProductsHandler(w, r, ctx, conn)
@@ -112,7 +111,7 @@ func main() {
 			})
 		})
 
-		// `new-cart` will create a new cart, JWT and session storage
+		// `new-cart` will create a new cart, JWT 
 		r.Post("/new-cart", func(w http.ResponseWriter, r *http.Request) {
 			handlers.NewCartHandler(w, r, ctx, conn)
 		})
