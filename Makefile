@@ -26,6 +26,7 @@ build:
 run:
 	$(GO) run $(MAIN_FILE)
 
+# Run the seeding for the database with products
 run-db:
 	$(GO) run $(DB_FILE)
 

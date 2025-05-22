@@ -45,6 +45,13 @@ func main() {
 		})
 
 		r.Route("/admin", func(r chi.Router) {
+			// r.Post("/new-user", func(w http.ResponseWriter, r *http.Request) {
+			// 	handlers.CreateUserHandler(w, r, ctx, conn)
+			// })
+			// r.Get("/user/{id}", func(w http.ResponseWriter, r *http.Request) {
+			// 	handlers.GetUserHandler(w, r, ctx, conn)
+			// })
+			r.Use(auth.AdminMiddleware) // Require each route has a valid JWT and admin role
 			r.Route("/products", func(r chi.Router) {
 				r.Get("/", func(w http.ResponseWriter, r *http.Request) {
 					handlers.ListProductsHandler(w, r, ctx, conn)
@@ -111,12 +118,11 @@ func main() {
 			})
 		})
 
-		// `new-cart` will create a new cart, JWT 
+		// `new-cart` will create a new cart, JWT
 		r.Post("/new-cart", func(w http.ResponseWriter, r *http.Request) {
 			handlers.NewCartHandler(w, r, ctx, conn)
 		})
 
-		// Cart logic ( must incorporate jwt to persist cart items over time )
 		r.Route("/cart", func(r chi.Router) {
 			r.Use(auth.CartMiddleware) // Require each route has a valid JWT and cart session ID
 			r.Get("/products", func(w http.ResponseWriter, r *http.Request) {
