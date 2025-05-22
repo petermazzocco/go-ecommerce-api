@@ -10,6 +10,26 @@ import (
 	"github.com/petermazzocco/go-ecommerce-api/internal/db"
 )
 
+func Login(ctx context.Context, conn *pgx.Conn, email, password string) (db.User, error) {
+	q := db.New(conn)
+
+	user, err := q.GetUserByEmailAndPassword(ctx, db.GetUserByEmailAndPasswordParams{
+		Email: email,
+		PasswordHash: 	password,
+	})
+	if err != nil {
+		log.Println("LOGIN ERROR: ", err.Error())		
+		return db.User{}, err
+	}
+
+	return user, nil
+}
+
+func Logout(ctx context.Context, conn *pgx.Conn, email, password string) error {
+	return nil
+}
+
+
 func CreateUser(ctx context.Context, conn *pgx.Conn, email, password string) (db.User, error) {
 	q := db.New(conn)
 

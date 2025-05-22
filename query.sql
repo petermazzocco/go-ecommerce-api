@@ -227,3 +227,8 @@ WHERE collection_id = $1 AND product_id = $2;
 SELECT p.* FROM products p
 JOIN collection_products cp ON p.id = cp.product_id
 WHERE cp.collection_id = $1;
+
+-- name: GetUserByEmailAndPassword :one
+SELECT * FROM users
+WHERE email = $1 and password_hash = $2 LIMIT 1;
+

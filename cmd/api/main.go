@@ -39,24 +39,51 @@ func main() {
 	r.Use(middleware.Recoverer)
 
 	r.Route("/api", func(r chi.Router) {
-		// Status check
+		// Health check
 		r.Get("/", func(w http.ResponseWriter, r *http.Request) {
+			w.Header().Set("Content-Type", "text/plain")
+			w.WriteHeader(http.StatusOK)
 			w.Write([]byte("Ecommerce API"))
 		})
 
+		// Portal login for admin users
+		r.Route("/auth", func(r chi.Router) {
+			r.Post("/login", func(w http.ResponseWriter, r *http.Request) {
+				handlers.LoginHandler(w, r, ctx, conn)
+			})
+			r.Post("/logout", func(w http.ResponseWriter, r *http.Request) {
+				handlers.LogoutHandler(w, r)
+			})
+		})
+
+		// Admin route group to require admin role
 		r.Route("/admin", func(r chi.Router) {
-			// r.Post("/new-user", func(w http.ResponseWriter, r *http.Request) {
-			// 	handlers.CreateUserHandler(w, r, ctx, conn)
-			// })
-			// r.Get("/user/{id}", func(w http.ResponseWriter, r *http.Request) {
-			// 	handlers.GetUserHandler(w, r, ctx, conn)
-			// })
-			r.Use(auth.AdminMiddleware) // Require each route has a valid JWT and admin role
+			r.Use(auth.AdminMiddleware) // Require each route has a valid JWT with a maps claim to an admin role
+			r.Route("/users", func(r chi.Router) {
+				r.Post("/", func(w http.ResponseWriter, r *http.Request) {
+					handlers.CreateUserHandler(w, r, ctx, conn)
+				})
+				r.Route("/{id}", func(r chi.Router) {
+					r.Get("/", func(w http.ResponseWriter, r *http.Request) {
+						handlers.GetUserHandler(w, r, ctx, conn)
+					})
+					// r.Put("/", func(w http.ResponseWriter, r *http.Request) {
+					// 	handlers.UpdateUserHandler(w, r, ctx, conn)
+					// })
+					// r.Delete("/", func(w http.ResponseWriter, r *http.Request) {
+					// 	handlers.DeleteUserHandler(w, r, ctx, conn)
+					// })
+				})
+			})
+
+			// Products route group to manage products
 			r.Route("/products", func(r chi.Router) {
 				r.Get("/", func(w http.ResponseWriter, r *http.Request) {
 					handlers.ListProductsHandler(w, r, ctx, conn)
 				})
-				// Get specific product
+				r.Post("/", func(w http.ResponseWriter, r *http.Request) {
+					handlers.CreateProductHandler(w, r, ctx, conn)
+				})
 				r.Route("/{id}", func(r chi.Router) {
 					r.Get("/", func(w http.ResponseWriter, r *http.Request) {
 						handlers.GetProductHandler(w, r, ctx, conn)
@@ -68,18 +95,16 @@ func main() {
 						handlers.DeleteProductHandler(w, r, ctx, conn)
 					})
 				})
-				// Create new product
-				r.Post("/new", func(w http.ResponseWriter, r *http.Request) {
-					handlers.CreateProductHandler(w, r, ctx, conn)
-				})
 			})
 
-			// Public facing collections route group to return collection information
+			// Collections route group to manage collections
 			r.Route("/collections", func(r chi.Router) {
 				r.Get("/", func(w http.ResponseWriter, r *http.Request) {
 					handlers.GetCollectionsHandler(w, r, ctx, conn)
 				})
-				// Get specific collection
+				r.Post("/", func(w http.ResponseWriter, r *http.Request) {
+					handlers.CreateCollectionHandler(w, r, ctx, conn)
+				})
 				r.Route("/{id}", func(r chi.Router) {
 					r.Get("/", func(w http.ResponseWriter, r *http.Request) {
 						handlers.GetCollectionByIDHandler(w, r, ctx, conn)
@@ -90,10 +115,6 @@ func main() {
 					r.Delete("/", func(w http.ResponseWriter, r *http.Request) {
 						handlers.DeleteCollectionByIDHandler(w, r, ctx, conn)
 					})
-				})
-				// Create new collection
-				r.Post("/new", func(w http.ResponseWriter, r *http.Request) {
-					handlers.CreateCollectionHandler(w, r, ctx, conn)
 				})
 			})
 		})
@@ -118,27 +139,31 @@ func main() {
 			})
 		})
 
-		// `new-cart` will create a new cart, JWT
+		// Creates a new cart with a unique ID that is stored in a cookie with a JWT for authentication
 		r.Post("/new-cart", func(w http.ResponseWriter, r *http.Request) {
 			handlers.NewCartHandler(w, r, ctx, conn)
 		})
 
+		// Cart route group requires a valid JWT and cart session ID
 		r.Route("/cart", func(r chi.Router) {
 			r.Use(auth.CartMiddleware) // Require each route has a valid JWT and cart session ID
-			r.Get("/products", func(w http.ResponseWriter, r *http.Request) {
+			r.Get("/", func(w http.ResponseWriter, r *http.Request) {
 				handlers.GetCartProductsHandler(w, r, ctx, conn)
 			})
-			r.Post("/clear", func(w http.ResponseWriter, r *http.Request) {
+			r.Delete("/", func(w http.ResponseWriter, r *http.Request) {
 				handlers.ClearCartHandler(w, r, ctx, conn)
 			})
-			r.Post("/add-item", func(w http.ResponseWriter, r *http.Request) {
+			r.Post("/add", func(w http.ResponseWriter, r *http.Request) {
 				handlers.AddItemHandler(w, r, ctx, conn)
 			})
-			r.Post("/remove-item", func(w http.ResponseWriter, r *http.Request) {
-				handlers.RemoveItemHandler(w, r, ctx, conn)
-			})
-			r.Post("/update-quantity-item", func(w http.ResponseWriter, r *http.Request) {
-				handlers.UpdateItemQuantityHandler(w, r, ctx, conn)
+			// Product ID in the cart to update quan or remove
+			r.Route("/{productID}", func(r chi.Router) {
+				r.Put("/", func(w http.ResponseWriter, r *http.Request) {
+					handlers.UpdateItemQuantityHandler(w, r, ctx, conn)
+				})
+				r.Delete("/", func(w http.ResponseWriter, r *http.Request) {
+					handlers.RemoveItemHandler(w, r, ctx, conn)
+				})
 			})
 		})
 

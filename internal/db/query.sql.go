@@ -605,6 +605,30 @@ func (q *Queries) GetUser(ctx context.Context, id int32) (User, error) {
 	return i, err
 }
 
+const getUserByEmailAndPassword = `-- name: GetUserByEmailAndPassword :one
+SELECT id, email, password_hash, is_admin, created_at, updated_at FROM users
+WHERE email = $1 and password_hash = $2 LIMIT 1
+`
+
+type GetUserByEmailAndPasswordParams struct {
+	Email        string `json:"email"`
+	PasswordHash string `json:"passwordHash"`
+}
+
+func (q *Queries) GetUserByEmailAndPassword(ctx context.Context, arg GetUserByEmailAndPasswordParams) (User, error) {
+	row := q.db.QueryRow(ctx, getUserByEmailAndPassword, arg.Email, arg.PasswordHash)
+	var i User
+	err := row.Scan(
+		&i.ID,
+		&i.Email,
+		&i.PasswordHash,
+		&i.IsAdmin,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
+}
+
 const listCollections = `-- name: ListCollections :many
 SELECT id, name, description, created_at, updated_at FROM collections
 ORDER BY name

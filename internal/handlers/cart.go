@@ -10,6 +10,7 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/go-chi/chi/v5"
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
@@ -143,7 +144,7 @@ func ClearCartHandler(w http.ResponseWriter, r *http.Request, ctx context.Contex
 	}
 
 	cookie := &http.Cookie{
-		Name:    "dam_nation_shop",
+		Name:    "dam_nation-shop",
 		Value:   "",
 		Path:    "/",
 		Expires: time.Unix(0, 0),
@@ -222,7 +223,7 @@ func RemoveItemHandler(w http.ResponseWriter, r *http.Request, ctx context.Conte
 		return
 	}
 
-	prod := r.PostFormValue("productID")
+	prod := chi.URLParam(r, "productID")
 	prodID, err := strconv.Atoi(prod)
 	if err != nil {
 		log.Println(err.Error())
@@ -258,7 +259,7 @@ func UpdateItemQuantityHandler(w http.ResponseWriter, r *http.Request, ctx conte
 		return
 	}
 
-	prod := r.PostFormValue("productID")
+	prod := chi.URLParam(r, "productID")
 	prodID, err := strconv.Atoi(prod)
 	if err != nil {
 		log.Println(err.Error())
