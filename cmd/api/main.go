@@ -67,12 +67,9 @@ func main() {
 					r.Get("/", func(w http.ResponseWriter, r *http.Request) {
 						handlers.GetUserHandler(w, r, ctx, conn)
 					})
-					// r.Put("/", func(w http.ResponseWriter, r *http.Request) {
-					// 	handlers.UpdateUserHandler(w, r, ctx, conn)
-					// })
-					// r.Delete("/", func(w http.ResponseWriter, r *http.Request) {
-					// 	handlers.DeleteUserHandler(w, r, ctx, conn)
-					// })
+					r.Delete("/", func(w http.ResponseWriter, r *http.Request) {
+						handlers.DeleteUserHandler(w, r, ctx, conn)
+					})
 				})
 			})
 
@@ -164,6 +161,10 @@ func main() {
 				r.Delete("/", func(w http.ResponseWriter, r *http.Request) {
 					handlers.RemoveItemHandler(w, r, ctx, conn)
 				})
+			})
+			// Create a Stripe check out session
+			r.Post("/checkout", func(w http.ResponseWriter, r *http.Request) {
+				handlers.CreateCheckoutSession(w, r)
 			})
 		})
 

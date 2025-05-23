@@ -152,6 +152,7 @@ func CartMiddleware(next http.Handler) http.Handler {
 func AdminMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		token, err := r.Cookie("dam-nation-shop-admin")
+		fmt.Println("TOKEN: ", token)
 		if err != nil {
 			log.Println("ADMIN COOKIE ERROR: ", err.Error())
 			w.WriteHeader(http.StatusUnauthorized)

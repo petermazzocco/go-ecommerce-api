@@ -24,6 +24,19 @@ func GetCollectionsHandler(w http.ResponseWriter, r *http.Request, ctx context.C
 		return
 	}
 
+	if len(collections) == 0 {
+		empty := make([]db.Collection, 0)
+		json, err := json.Marshal(empty)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return 
+		}
+
+		w.WriteHeader(http.StatusOK)
+		w.Write(json)
+		return
+	}
+
 	json, err := json.Marshal(collections)
 	if 	err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)

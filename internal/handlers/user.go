@@ -69,5 +69,17 @@ func GetUserHandler(w http.ResponseWriter, r *http.Request, ctx context.Context,
 	w.Write(json)
 }
 
-func DeleteUserHandler(w http.ResponseWriter, r *http.Response, ctx context.Context, conn *pgx.Conn) {
+func DeleteUserHandler(w http.ResponseWriter, r *http.Request, ctx context.Context, conn *pgx.Conn) {
+	w.Header().Set("Content-Type", "text/plain")
+	id := chi.URLParam(r, "id")
+	strId, _ := strconv.Atoi(id)
+
+	if err := methods.DeleteUser(ctx, conn, int32(strId)); err != nil {
+		log.Println("DELETE USER ERROR: ", err.Error())
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+	w.Write([]byte("User deleted"))
 }

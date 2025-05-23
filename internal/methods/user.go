@@ -3,7 +3,6 @@ package methods
 import (
 	"context"
 	"log"
-	"os"
 
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgtype"
@@ -25,9 +24,6 @@ func Login(ctx context.Context, conn *pgx.Conn, email, password string) (db.User
 	return user, nil
 }
 
-func Logout(ctx context.Context, conn *pgx.Conn, email, password string) error {
-	return nil
-}
 
 
 func CreateUser(ctx context.Context, conn *pgx.Conn, email, password string) (db.User, error) {
@@ -46,14 +42,7 @@ func CreateUser(ctx context.Context, conn *pgx.Conn, email, password string) (db
 	return user, nil
 }
 
-func CheckUserAdmin(ctx context.Context, id int32) (bool, error) {
-	url := os.Getenv("DB_URL")
-
-	conn, err := pgx.Connect(ctx, url)
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer conn.Close(ctx)
+func CheckUserAdmin(ctx context.Context, conn *pgx.Conn, id int32) (bool, error) {
 
 	q := db.New(conn)
 
@@ -81,6 +70,6 @@ func GetUser(ctx context.Context, conn *pgx.Conn, id int32) (db.User, error) {
 	return user, nil
 }
 
-func DeleteUser(ctx context.Context, conn *pgx.Conn) error {
+func DeleteUser(ctx context.Context, conn *pgx.Conn, id int32) error {
 	return nil
 }
