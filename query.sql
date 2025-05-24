@@ -19,6 +19,9 @@ RETURNING *;
 DELETE FROM users
 WHERE id = $1 RETURNING *;
 
+-- name: GetUserByEmailAndPassword :one
+SELECT * FROM users
+WHERE email = $1 and password_hash = $2 LIMIT 1;
 
 -- Products
 -- name: GetProduct :one
@@ -31,9 +34,9 @@ ORDER BY name;
 
 -- name: CreateProduct :one
 INSERT INTO products (
-  name, description, price
+  name, description, price, price_id
 ) VALUES (
-  $1, $2, $3
+  $1, $2, $3, $4
 )
 RETURNING *;
 
@@ -42,6 +45,7 @@ UPDATE products
   SET name = $2,
   description = $3,
   price = $4,
+  price_id = $5,
   updated_at = NOW()
 WHERE id = $1;
 
@@ -133,17 +137,22 @@ WHERE id = $1;
 
 -- Cart Items
 -- name: GetCartItems :many
-SELECT ci.product_id, ci.quantity, p.name, p.description, p.price
+SELECT 
+    ci.product_id, 
+    ci.quantity, 
+    ci.price_id,
+    p.name, 
+    p.description, 
+    p.price
 FROM cart_items ci
 JOIN products p ON ci.product_id = p.id
 WHERE ci.cart_id = $1;
 
 -- name: AddCartItem :exec
 INSERT INTO cart_items (
-  cart_id, product_id, quantity
+  cart_id, product_id, quantity, price_id
 ) VALUES (
-  $1, $2, $3
-)
+  $1, $2, $3, (SELECT price_id FROM products WHERE id = $2))
 ON CONFLICT (cart_id, product_id) 
 DO UPDATE SET quantity = cart_items.quantity + EXCLUDED.quantity,
               updated_at = NOW();
@@ -227,8 +236,3 @@ WHERE collection_id = $1 AND product_id = $2;
 SELECT p.* FROM products p
 JOIN collection_products cp ON p.id = cp.product_id
 WHERE cp.collection_id = $1;
-
--- name: GetUserByEmailAndPassword :one
-SELECT * FROM users
-WHERE email = $1 and password_hash = $2 LIMIT 1;
-

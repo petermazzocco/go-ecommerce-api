@@ -144,7 +144,7 @@ func ClearCartHandler(w http.ResponseWriter, r *http.Request, ctx context.Contex
 	}
 
 	cookie := &http.Cookie{
-		Name:    "dam_nation-shop",
+		Name:    "dam_nation_shop",
 		Value:   "",
 		Path:    "/",
 		Expires: time.Unix(0, 0),

@@ -54,14 +54,22 @@ func main() {
 			r.Post("/logout", func(w http.ResponseWriter, r *http.Request) {
 				handlers.LogoutHandler(w, r)
 			})
+			r.Post("/register", func(w http.ResponseWriter, r *http.Request) {
+				handlers.RegisterAdminUserHandler(w, r, ctx, conn)
+			})
 		})
 
 		// Admin route group to require admin role
 		r.Route("/admin", func(r chi.Router) {
 			r.Use(auth.AdminMiddleware) // Require each route has a valid JWT with a maps claim to an admin role
+			r.Get("/", func(w http.ResponseWriter, r *http.Request) {
+				w.Header().Set("Content-Type", "text/plain")
+				w.WriteHeader(http.StatusOK)
+				w.Write([]byte("Admin Portal"))
+			})
 			r.Route("/users", func(r chi.Router) {
-				r.Post("/", func(w http.ResponseWriter, r *http.Request) {
-					handlers.CreateUserHandler(w, r, ctx, conn)
+				r.Post("/register", func(w http.ResponseWriter, r *http.Request) {
+					handlers.RegisterAdminUserHandler(w, r, ctx, conn)
 				})
 				r.Route("/{id}", func(r chi.Router) {
 					r.Get("/", func(w http.ResponseWriter, r *http.Request) {
@@ -111,6 +119,17 @@ func main() {
 					})
 					r.Delete("/", func(w http.ResponseWriter, r *http.Request) {
 						handlers.DeleteCollectionByIDHandler(w, r, ctx, conn)
+					})
+					r.Route("/product", func(r chi.Router) {
+						// Add or remove products from a collection
+						r.Route("/{id}", func(r chi.Router) {
+							r.Post("/", func(w http.ResponseWriter, r *http.Request) {
+								handlers.AddProductToCollectionHandler(w, r, ctx, conn)
+							})
+							r.Delete("/", func(w http.ResponseWriter, r *http.Request) {
+								handlers.RemoveProductFromCollectionHandler(w, r, ctx, conn)
+							})
+						})
 					})
 				})
 			})
@@ -164,7 +183,7 @@ func main() {
 			})
 			// Create a Stripe check out session
 			r.Post("/checkout", func(w http.ResponseWriter, r *http.Request) {
-				handlers.CreateCheckoutSession(w, r)
+				handlers.CreateCheckoutSession(w, r, ctx, conn)
 			})
 		})
 

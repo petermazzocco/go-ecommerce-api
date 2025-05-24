@@ -24,6 +24,34 @@ func CreateCollection(ctx context.Context, conn *pgx.Conn, c db.Collection) (db.
 	return collection, nil
 }
 
+func AddProductToCollection(ctx context.Context, conn *pgx.Conn, collectionID int, productID int) error {
+	q := db.New(conn)
+
+	if err := q.AddProductToCollection(ctx, db.AddProductToCollectionParams{
+		CollectionID: int32(collectionID),
+		ProductID:   int32(productID),
+	}); err != nil {
+		log.Println(err.Error())
+		return err
+	}
+
+	return nil
+}
+
+func RemoveProductFromCollection(ctx context.Context, conn *pgx.Conn, collectionID int, productID int) error {
+	q := db.New(conn)
+
+	if err := q.RemoveProductFromCollection(ctx, db.RemoveProductFromCollectionParams{
+		CollectionID: int32(collectionID),
+		ProductID:   int32(productID),
+	}); err != nil {
+		log.Println(err.Error())
+		return err
+	}
+
+	return nil
+}
+
 func GetCollections(ctx context.Context, conn *pgx.Conn) ([]db.Collection, error) {
 	q := db.New(conn)
 

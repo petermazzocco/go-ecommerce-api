@@ -26,11 +26,12 @@ func CreateProductHandler(w http.ResponseWriter, r *http.Request, ctx context.Co
 	name := r.PostFormValue("productName")
 	description := r.PostFormValue("productDescription")
 	price := r.PostFormValue("productPrice")
-
+	priceID := r.PostFormValue("priceID")
 	p.Name = name
 	p.Description = description
 	floatPrice, _ := strconv.ParseFloat(price, 64)
 	p.Price = floatPrice
+	p.PriceID = priceID
 
 	product, err := methods.CreateProduct(ctx, conn, p)
 	if err != nil {

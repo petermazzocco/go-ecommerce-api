@@ -15,6 +15,7 @@ type Product struct {
 	ID          int                     `json:"id"`
 	Price       float64                 `json:"price"`
 	Name        string                  `json:"name"`
+	PriceID   string                  `json:"productID"`
 	Description string                  `json:"description"`
 	Images      []string                `json:"images"`
 	Sizes       []db.GetProductSizesRow `json:"sizes"`
@@ -148,6 +149,7 @@ func CreateProduct(ctx context.Context, conn *pgx.Conn, p Product) (db.Product, 
 		Name:        p.Name,
 		Description: pgtype.Text{String: p.Description},
 		Price:       price,
+		PriceID:   p.PriceID,
 	})
 
 	if err != nil {
@@ -234,10 +236,4 @@ func UpdateProduct(ctx context.Context, conn *pgx.Conn, p Product) error {
 	return nil
 }
 
-func AddProductToCollection(ctx context.Context, conn *pgx.Conn, pID, cID int) error {
-	return nil
-}
 
-func RemoveProductFromCollection(ctx context.Context, conn *pgx.Conn, pID, cID int) error {
-	return nil
-}

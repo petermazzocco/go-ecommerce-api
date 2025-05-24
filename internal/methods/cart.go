@@ -40,13 +40,14 @@ func GetCart(ctx context.Context, conn *pgx.Conn, id uuid.UUID) (db.Cart, error)
 func GetItems(ctx context.Context, conn *pgx.Conn, id uuid.UUID) ([]db.GetCartItemsRow, error) {
 	q := db.New(conn)
 
-	_, err := GetCart(ctx, conn, id)
+	cart, err := GetCart(ctx, conn, id)
 	if err != nil {
 		log.Println("GET CART ERROR: ", err.Error())
 		return nil, fmt.Errorf("Error getting cart")
 	}
-
+	fmt.Println("CART ID: ", cart.ID)
 	items, err := q.GetCartItems(ctx, pgtype.UUID{Bytes: id, Valid: true})
+	fmt.Println("ITEMS: ", items)
 	if err != nil {
 		log.Println("GET CART ITEMS ERROR: ", err.Error())
 		return []db.GetCartItemsRow{}, fmt.Errorf("Error fetching items")
@@ -104,7 +105,7 @@ func AddItem(ctx context.Context, conn *pgx.Conn, id uuid.UUID, prodID int, quan
 		log.Println("GET CART ERROR: ", err.Error())
 		return fmt.Errorf("Error getting cart")
 	}
-
+	
 	if err := q.AddCartItem(ctx, db.AddCartItemParams{
 		CartID:    pgtype.UUID{Bytes: id, Valid: true},
 		ProductID: int32(prodID),

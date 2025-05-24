@@ -18,6 +18,7 @@ type CartItem struct {
 	ID        int32              `json:"id"`
 	CartID    pgtype.UUID        `json:"cartId"`
 	ProductID int32              `json:"productId"`
+	PriceID   string             `json:"priceId"`
 	Quantity  int32              `json:"quantity"`
 	CreatedAt pgtype.Timestamptz `json:"createdAt"`
 	UpdatedAt pgtype.Timestamptz `json:"updatedAt"`
@@ -72,6 +73,7 @@ type Product struct {
 	Name        string             `json:"name"`
 	Description pgtype.Text        `json:"description"`
 	Price       pgtype.Numeric     `json:"price"`
+	PriceID     string             `json:"priceId"`
 	CreatedAt   pgtype.Timestamptz `json:"createdAt"`
 	UpdatedAt   pgtype.Timestamptz `json:"updatedAt"`
 }

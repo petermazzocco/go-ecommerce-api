@@ -15,6 +15,7 @@ CREATE TABLE products (
     name VARCHAR(255) NOT NULL,
     description TEXT,
     price DECIMAL(10, 2) NOT NULL,
+    price_id VARCHAR(255) NOT NULL,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
@@ -100,6 +101,7 @@ CREATE TABLE cart_items (
     id SERIAL PRIMARY KEY,
     cart_id UUID NOT NULL REFERENCES carts(id) ON DELETE CASCADE,
     product_id INTEGER NOT NULL REFERENCES products(id) ON DELETE CASCADE,
+    price_id VARCHAR(255) NOT NULL,
     quantity INTEGER NOT NULL DEFAULT 1,
     UNIQUE(cart_id, product_id),
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),

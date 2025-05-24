@@ -13,10 +13,9 @@ import (
 
 const addCartItem = `-- name: AddCartItem :exec
 INSERT INTO cart_items (
-  cart_id, product_id, quantity
+  cart_id, product_id, quantity, price_id
 ) VALUES (
-  $1, $2, $3
-)
+  $1, $2, $3, (SELECT price_id FROM products WHERE id = $2))
 ON CONFLICT (cart_id, product_id) 
 DO UPDATE SET quantity = cart_items.quantity + EXCLUDED.quantity,
               updated_at = NOW()
@@ -166,27 +165,34 @@ func (q *Queries) CreateCollection(ctx context.Context, arg CreateCollectionPara
 
 const createProduct = `-- name: CreateProduct :one
 INSERT INTO products (
-  name, description, price
+  name, description, price, price_id
 ) VALUES (
-  $1, $2, $3
+  $1, $2, $3, $4
 )
-RETURNING id, name, description, price, created_at, updated_at
+RETURNING id, name, description, price, price_id, created_at, updated_at
 `
 
 type CreateProductParams struct {
 	Name        string         `json:"name"`
 	Description pgtype.Text    `json:"description"`
 	Price       pgtype.Numeric `json:"price"`
+	PriceID     string         `json:"priceId"`
 }
 
 func (q *Queries) CreateProduct(ctx context.Context, arg CreateProductParams) (Product, error) {
-	row := q.db.QueryRow(ctx, createProduct, arg.Name, arg.Description, arg.Price)
+	row := q.db.QueryRow(ctx, createProduct,
+		arg.Name,
+		arg.Description,
+		arg.Price,
+		arg.PriceID,
+	)
 	var i Product
 	err := row.Scan(
 		&i.ID,
 		&i.Name,
 		&i.Description,
 		&i.Price,
+		&i.PriceID,
 		&i.CreatedAt,
 		&i.UpdatedAt,
 	)
@@ -361,7 +367,13 @@ func (q *Queries) GetCartItemCount(ctx context.Context, cartID pgtype.UUID) (int
 }
 
 const getCartItems = `-- name: GetCartItems :many
-SELECT ci.product_id, ci.quantity, p.name, p.description, p.price
+SELECT 
+    ci.product_id, 
+    ci.quantity, 
+    ci.price_id,
+    p.name, 
+    p.description, 
+    p.price
 FROM cart_items ci
 JOIN products p ON ci.product_id = p.id
 WHERE ci.cart_id = $1
@@ -370,6 +382,7 @@ WHERE ci.cart_id = $1
 type GetCartItemsRow struct {
 	ProductID   int32          `json:"productId"`
 	Quantity    int32          `json:"quantity"`
+	PriceID     string         `json:"priceId"`
 	Name        string         `json:"name"`
 	Description pgtype.Text    `json:"description"`
 	Price       pgtype.Numeric `json:"price"`
@@ -388,6 +401,7 @@ func (q *Queries) GetCartItems(ctx context.Context, cartID pgtype.UUID) ([]GetCa
 		if err := rows.Scan(
 			&i.ProductID,
 			&i.Quantity,
+			&i.PriceID,
 			&i.Name,
 			&i.Description,
 			&i.Price,
@@ -447,7 +461,7 @@ func (q *Queries) GetCollectionImages(ctx context.Context, collectionID int32) (
 }
 
 const getCollectionProducts = `-- name: GetCollectionProducts :many
-SELECT p.id, p.name, p.description, p.price, p.created_at, p.updated_at FROM products p
+SELECT p.id, p.name, p.description, p.price, p.price_id, p.created_at, p.updated_at FROM products p
 JOIN collection_products cp ON p.id = cp.product_id
 WHERE cp.collection_id = $1
 `
@@ -466,6 +480,7 @@ func (q *Queries) GetCollectionProducts(ctx context.Context, collectionID int32)
 			&i.Name,
 			&i.Description,
 			&i.Price,
+			&i.PriceID,
 			&i.CreatedAt,
 			&i.UpdatedAt,
 		); err != nil {
@@ -480,7 +495,7 @@ func (q *Queries) GetCollectionProducts(ctx context.Context, collectionID int32)
 }
 
 const getProduct = `-- name: GetProduct :one
-SELECT id, name, description, price, created_at, updated_at FROM products
+SELECT id, name, description, price, price_id, created_at, updated_at FROM products
 WHERE id = $1 LIMIT 1
 `
 
@@ -493,6 +508,7 @@ func (q *Queries) GetProduct(ctx context.Context, id int32) (Product, error) {
 		&i.Name,
 		&i.Description,
 		&i.Price,
+		&i.PriceID,
 		&i.CreatedAt,
 		&i.UpdatedAt,
 	)
@@ -661,7 +677,7 @@ func (q *Queries) ListCollections(ctx context.Context) ([]Collection, error) {
 }
 
 const listProducts = `-- name: ListProducts :many
-SELECT id, name, description, price, created_at, updated_at FROM products
+SELECT id, name, description, price, price_id, created_at, updated_at FROM products
 ORDER BY name
 `
 
@@ -679,6 +695,7 @@ func (q *Queries) ListProducts(ctx context.Context) ([]Product, error) {
 			&i.Name,
 			&i.Description,
 			&i.Price,
+			&i.PriceID,
 			&i.CreatedAt,
 			&i.UpdatedAt,
 		); err != nil {
@@ -807,6 +824,7 @@ UPDATE products
   SET name = $2,
   description = $3,
   price = $4,
+  price_id = $5,
   updated_at = NOW()
 WHERE id = $1
 `
@@ -816,6 +834,7 @@ type UpdateProductParams struct {
 	Name        string         `json:"name"`
 	Description pgtype.Text    `json:"description"`
 	Price       pgtype.Numeric `json:"price"`
+	PriceID     string         `json:"priceId"`
 }
 
 func (q *Queries) UpdateProduct(ctx context.Context, arg UpdateProductParams) error {
@@ -824,6 +843,7 @@ func (q *Queries) UpdateProduct(ctx context.Context, arg UpdateProductParams) er
 		arg.Name,
 		arg.Description,
 		arg.Price,
+		arg.PriceID,
 	)
 	return err
 }
