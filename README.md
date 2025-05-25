@@ -1,7 +1,7 @@
 # Go Ecommerce API
 
 A complete ecommerce API solution built with Go, featuring Stripe payment integration, JWT-based authentication, and comprehensive admin functionality for managing products and collections.
-This repo is not for commercial use and is a submission for roadmap.sh's Go Ecommerce API project (https://roadmap.sh/projects/ecommerce-api)[https://roadmap.sh/projects/ecommerce-api].
+This repo is not for commercial use and is a submission for [roadmap.sh's Go Ecommerce API project](https://roadmap.sh/projects/ecommerce-api).
 
 ## Features
 
