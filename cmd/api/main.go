@@ -54,9 +54,6 @@ func main() {
 			r.Post("/logout", func(w http.ResponseWriter, r *http.Request) {
 				handlers.LogoutHandler(w, r)
 			})
-			r.Post("/register", func(w http.ResponseWriter, r *http.Request) {
-				handlers.RegisterAdminUserHandler(w, r, ctx, conn)
-			})
 		})
 
 		// Admin route group to require admin role
