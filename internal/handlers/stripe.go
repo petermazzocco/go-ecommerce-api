@@ -10,6 +10,7 @@ import (
 	"github.com/jackc/pgx/v5"
 	"github.com/petermazzocco/go-ecommerce-api/internal/methods"
 	"github.com/stripe/stripe-go/v82"
+	"github.com/stripe/stripe-go/v82/customer"
 	"github.com/stripe/stripe-go/v82/checkout/session"
 )
 
@@ -61,11 +62,22 @@ func CreateCheckoutSession(w http.ResponseWriter, r *http.Request, ctx context.C
 	var lineItems []*stripe.CheckoutSessionLineItemParams
 	for _, item := range items {
 		lineItem := &stripe.CheckoutSessionLineItemParams{
-			Price:    stripe.String(string(item.PriceID)), // replace with actual price ID when we create them
+			Price:    stripe.String(string(item.PriceID)), 
 			Quantity: stripe.Int64(int64(item.Quantity)),
 		}
 		lineItems = append(lineItems, lineItem)
 	}
+
+	// Create a stripe Customer if needed
+	email := r.PostFormValue("email")
+	name := r.PostFormValue("name")
+	customerParams := &stripe.CustomerParams{
+		Email: stripe.String(email),
+		Name:  stripe.String(name),
+		// Add more customer details as needed
+	}
+
+	customer, err := customer.New(customerParams)
 
 	// Stripe checkout session params
 	params := &stripe.CheckoutSessionParams{
@@ -74,7 +86,13 @@ func CreateCheckoutSession(w http.ResponseWriter, r *http.Request, ctx context.C
 		LineItems:  lineItems,
 		Metadata: map[string]string{
 			"cartID": cart.ID.String(),
+			// Add more metadata as needed here
 		},
+		BillingAddressCollection: stripe.String(stripe.CheckoutSessionBillingAddressCollectionRequired),
+		ShippingAddressCollection: &stripe.CheckoutSessionShippingAddressCollectionParams{
+			AllowedCountries: stripe.StringSlice([]string{"US", "CA"}), // Example allowed AllowedCountries
+		},
+		Customer: stripe.String(customer.ID),
 		Mode: stripe.String(stripe.CheckoutSessionModePayment),
 	}
 

@@ -26,8 +26,13 @@ type NewProduct struct {
 
 func GetCartIDFromCookie(r *http.Request) (string, error) {
 	key := os.Getenv("JWT_KEY")
+	if key == "" {
+		log.Println("JWT_KEY environment variable is not set")
+		return "", fmt.Errorf("Permission denied")
+	}
 
-	cookie, err := r.Cookie("dam-nation-shop")
+	cookieName := os.Getenv("COOKIE_NAME")
+	cookie, err := r.Cookie(cookieName)
 	if err != nil {
 		log.Println(err.Error())
 		return "", err

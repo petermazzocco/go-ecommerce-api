@@ -15,7 +15,12 @@ import (
 
 func CreateJWT(w http.ResponseWriter, r *http.Request, c db.Cart) (string, error) {
 	key := os.Getenv("JWT_KEY")
+	if key == "" {
+		log.Println("JWT_KEY environment variable is not set")
+		return "", fmt.Errorf("Permission denied")
+	}
 
+	cookieName := os.Getenv("COOKIE_NAME")
 	claims := jwt.MapClaims{
 		"expiresAt": time.Now().Add(24 * time.Hour),
 		"cartID":    c.ID, // pass the cart ID
@@ -30,7 +35,7 @@ func CreateJWT(w http.ResponseWriter, r *http.Request, c db.Cart) (string, error
 	}
 
 	http.SetCookie(w, &http.Cookie{
-		Name:     "dam-nation-shop",
+		Name:     cookieName,
 		Value:    ss,
 		HttpOnly: true,
 		Secure:   false,
@@ -44,7 +49,11 @@ func CreateJWT(w http.ResponseWriter, r *http.Request, c db.Cart) (string, error
 
 func CreateAdminJWT(w http.ResponseWriter, r *http.Request, u db.User) (string, error) {
 	key := os.Getenv("JWT_KEY")
-	fmt.Println("USER: ", u.ID)
+	if key == "" {
+		log.Println("JWT_KEY environment variable is not set")
+		return "", fmt.Errorf("Permission denied")
+	}
+	cookieName := os.Getenv("ADMIN_COOKIE_NAME")
 	claims := jwt.MapClaims{
 		"expiresAt": time.Now().Add(24 * time.Hour),
 		"userID":    u.ID, // pass the user ID
@@ -59,7 +68,7 @@ func CreateAdminJWT(w http.ResponseWriter, r *http.Request, u db.User) (string, 
 	}
 
 	http.SetCookie(w, &http.Cookie{
-		Name:     "dam-nation-shop-admin",
+		Name:     cookieName,
 		Value:    ss,
 		HttpOnly: true,
 		Secure:   false,
@@ -131,8 +140,9 @@ func ValidateAdminJWT(tokenString string, r *http.Request) error {
 }
 func CartMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		cookieName := os.Getenv("COOKIE_NAME")
 		// Get the token from the Authorization header
-		token, err := r.Cookie("dam-nation-shop")
+		token, err := r.Cookie(cookieName)
 		if err != nil {
 			log.Println("COOKIE ERROR: ", err.Error())
 			w.WriteHeader(http.StatusUnauthorized)
@@ -153,7 +163,8 @@ func CartMiddleware(next http.Handler) http.Handler {
 
 func AdminMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		token, err := r.Cookie("dam-nation-shop-admin")
+		cookieName := os.Getenv("ADMIN_COOKIE_NAME")
+		token, err := r.Cookie(cookieName)
 		if err != nil {
 			log.Println("ADMIN COOKIE ERROR: ", err.Error())
 			w.WriteHeader(http.StatusUnauthorized)
