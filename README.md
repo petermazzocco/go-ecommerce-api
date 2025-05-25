@@ -28,6 +28,7 @@ DB_URL=postgresql://username:password@localhost:5432/dbname
 JWT_SECRET=your_jwt_secret_key
 STRIPE_SECRET_KEY=your_stripe_secret_key
 COOKIE_NAME=your_cookie_name
+ADMIN_COOKIE_NAME=your_admin_cookie_name
 ```
 
 ## Getting Started
